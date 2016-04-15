@@ -1,0 +1,14 @@
+delete
+*bak
+tmp
+*.pyc
+## directory
+mag_website
+top_website
+pcap_website
+fig
+pattern_match
+svm
+result
+gen
+sqr_mul

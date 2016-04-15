@@ -1,0 +1,18 @@
+- iPhone sensors:
+  (a) collect_iphone.sh
+    use SensorLog on iPhone to read sensor and use "ns" command to retrieve data from iPhone in real time.
+
+- OSX CPU, Memory, Disk, Networks
+  (a) collect_top.sh
+    use command "top"
+
+- Network Packets
+  (a) collect_pkts.sh
+    use "tcpdump"
+
+- Generate request to websites
+  (a) gen_http_requests.pl
+    use "curl" to generate http request
+
+- Generate traces of opening/closing applications
+  (a) gen_app_cpu_loads.pl
