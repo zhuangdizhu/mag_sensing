@@ -31,7 +31,7 @@ function preprocess_data(filename)
     %% --------------------
     input_dir  = '../collect/gen/';
     output_dir = '../preprocess_mag/data/';
-
+    appInterval = 6;
 
     %% --------------------
     %% Variable
@@ -39,7 +39,7 @@ function preprocess_data(filename)
     fig_idx = 0;
     app_mag_s    = {};
     app_time_s   = {};
-
+    frequency = [];
     %% --------------------
     %% Check input
     %% --------------------
@@ -57,13 +57,11 @@ function preprocess_data(filename)
     %% --------------------
     if DEBUG2, fprintf('Read Event Time\n'); end
     
-    event_time = load([input_dir filename '.app_time_processed.txt']);
-    event_time(:,1) = event_time(:,1) - event_time(1,1);
-    event_types = unique(sort(event_time(:,2)));
+    event_logs = load([input_dir filename '.app_time_processed.txt']);
+    event_types = unique(sort(event_logs(:,1)));
 
-    fprintf('  sample events: %dx%d\n', size(event_time,1));
-    fprintf('  # events: %d\n', length(event_types));
-    fprintf('  duration: %fs\n', event_time(end,1));
+    fprintf('  sample events: %dx%d\n', size(event_logs,1));
+    fprintf('  # event types: %d\n', length(event_types));
     
     %In future, the appName and related class label shoud be written into
     % a configuration file, and both the preprocess_data.py &
@@ -81,52 +79,64 @@ function preprocess_data(filename)
     if DEBUG2, fprintf('Read Mag\n'); end
    
     
-    for idx = 1:length(event_types) % start from 0
+    for idx = 1:length(event_types) % elments in event_types start from 0
         key = event_types(idx);
         appName = AppObj(key);
-        mags = load([input_dir filename '_' appName '.mag_processed.txt']);
+        id = sort(find(event_logs(:,1) == key));
+        event_indexs = event_logs(id,2);
         
+        mags = load([input_dir filename '_' appName '.mag_processed.txt']);
+        %event_logs
+       
+        %%tmp variables
         tmp_app_mags    = {};
         tmp_app_times   = {};
-        event_begin_idx = 1;
-        fs = [];
-        for i=1:length(mags)
-            if mags(i) < 0
-                %at each end of one event, I insert a line begin with '-100' 
-                if i - event_begin_idx >= 1
-                    % the event is not empty, there are at least one log
-                    app_mag = mags(event_begin_idx:i-1,:);
-                    event_begin_idx = i+1;
-                    
-                    
-                    %extract frequency 
-                    fs(end+1) = size(app_mag,1) / app_mag(end,1);
-                    
-                    %normalize the log info
-                    app_mag(:,1) = app_mag(:,1) - app_mag(1,1); %time
-                    for mi = 2:4
-                        app_mag(:,mi) = app_mag(:,mi) - min(app_mag(:,mi));
-                    end
-                    
-                    app_mag(:,6) = sqrt(app_mag(:,2).^2 + app_mag(:,3).^2 + app_mag(:,4).^2);
-                    app_mag(:,6) =  app_mag(:,6)- min(app_mag(:,6));
-                    app_mag(:,6) = app_mag(:,6) / max(app_mag(:,6));
-                    
-                    %add this event to the current app set
-                    tmp_app_mags{end+1} = app_mag(:,6);
-                    tmp_app_times{end+1} = app_mag(:,1);
-                end 
-            end
+        %event_begin_idx = 1;
+
+        for i = 1:length(event_indexs)
             
+            if i>1
+                startIndex = event_indexs(i-1)+1;
+            else
+                startIndex = 1;
+            end
+            endIndex = event_indexs(i);
+            timeInterval = mags(endIndex,1) - mags(startIndex,1);
+            if timeInterval > appInterval+1
+                endIndex = find(mags()
+            end
+            app_mag = mags(startIndex:endIndex,:);
+            app_mag(:,1) = app_mag(:,1) - min(app_mag(:,1)); 
+            frequency(end+1) = size(app_mag,1)/app_mag(end,1);
+            
+            %disp('normalize the log info')                
+            for mi = 2:4
+                app_mag(:,mi) = app_mag(:,mi) - min(app_mag(:,mi));
+            end                    
+            app_mag(:,6) = sqrt(app_mag(:,2).^2 + app_mag(:,3).^2 + app_mag(:,4).^2);
+            app_mag(:,6) =  app_mag(:,6)- min(app_mag(:,6));
+            app_mag(:,6) = app_mag(:,6) / max(app_mag(:,6));
+                    
+           %add this sequence to the collected set
+            tmp_app_mags{end+1} = app_mag(:,6);
+            tmp_app_times{end+1} = app_mag(:,1);
         end
+        
+        
         app_mag_s{key+1}     = tmp_app_mags; %key starts from 0
         app_time_s{key+1}    = tmp_app_times;        
     end
     app_type_s = event_types;
     
     save ([output_dir filename '.mat'], 'app_mag_s','app_time_s', 'app_type_s','-mat');
-    if DEBUG2, fprintf('Read Mag Finished\n'); end
     
-
-
+    if DEBUG2
+        fprintf('Read Mag Finished\n'); 
+        fprintf('Collected from Apps:\n ');
+        for i = 1:length(event_types)
+            fprintf('%s\t',AppObj(event_types(i)));
+        end
+        frequency = mean(frequency);
+        fprintf('\nSensor Frequency:\t%f\n',frequency);
+    end
 end

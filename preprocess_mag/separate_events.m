@@ -41,7 +41,7 @@ function separate_events(filename)
     %% --------------------
     %% Check input
     %% --------------------
-    if nargin < 1, filename = '20160327.exp2'; end
+    if nargin < 1, filename = 'file03'; end
 
 
     %% --------------------
@@ -55,6 +55,8 @@ function separate_events(filename)
 
     event_time = load([input_dir filename '.app_time_processed.txt']);
     event_time(:,1) = event_time(:,1) - event_time(1,1);
+    disp('attenion')
+    event_time(end,1)
     events = unique(sort(event_time(:,2)));
 
     fprintf('  size: %dx%d\n', size(event_time));

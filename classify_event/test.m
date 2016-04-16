@@ -51,8 +51,8 @@ function test(filename)
     self_train  = 0;  
     DBA_iteration = 10;
     
-    %[app_mags, app_times, app_types] = read_mat_input(input_dir,filename);
-    [app_mags, app_times, app_types] = read_traditional_input(input_dir, filename);
+    [app_mags, app_times, app_types] = read_mat_input(input_dir,filename);
+    %[app_mags, app_times, app_types] = read_traditional_input(input_dir, filename);
      
     confusionMatrix     = zeros(max(app_types)+1);
     corrMatrix          = zeros(max(app_types)+1);
@@ -118,10 +118,10 @@ function test(filename)
                 
                 confusionMatrix(i, match_label) = confusionMatrix(i, match_label) + 1;
             end
-            corrMatrix = corrMatrix ./ countMatrix;
+            
         end
     end
-
+    corrMatrix = corrMatrix ./ countMatrix;
     confusionMatrix = confusionMatrix ./ repmat(sum(confusionMatrix,2), 1, size(confusionMatrix,2));
     fig_idx = fig_idx + 1;
     fh = figure(fig_idx); clf;
