@@ -5,6 +5,7 @@ import sys, os, signal, random, re, fnmatch, gc, csv
 import time, locale, datetime, requests
 import socket
 import dns, dns.name, dns.query, dns.resolver, dns.exception
+import collections
 # import list_data
 # import data
 # import np
@@ -55,7 +56,7 @@ def force_utf8_hack():
 ###################
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        sys.exit('Usage:    preprocess_sensorlog_socket.py <FileName>')
+        sys.exit('Usage:    preprocess_multi_app.py <FileName>')
         sys.exit(1)
 
     force_utf8_hack()
@@ -69,80 +70,50 @@ if __name__ == "__main__":
     ###################
     if DEBUG2: print "Read Event Time"
 
-    event_ts   = []
-    events     = dict()  ## event and its indices
-    event_type = dict()  ## event and its type
-    type_cnt   = 0
-    f = open(input_dir + filename + ".app_time_processed.txt", 'w')
-    with open(input_dir + filename + ".app_time.txt", 'rb') as csvfile:
+    appType = dict()
+    appType['PowerPoint'] = 0
+    appType['Word'] = 1
+    appType['Excel'] = 2
+    appType['Chrome'] = 3
+    appType['Safari'] = 4
+    appType['Skype'] = 5
+    appType['QuickTimePlayer'] = 6
+
+    #events     = collections.defaultdict(list)  ## event and its indices
+    f = open(input_dir + filename + ".multi_app_time_processed.txt", 'w')
+    with open(input_dir + filename + ".multi_app_time.txt", 'rb') as csvfile:
       spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
       cnt = 0
       for row in spamreader:
-        # print ', '.join(row)
-        #ts1.append(float(row[0]))
-        event_ts.append(row[1])
-        # print "%d: %f, %s" % (cnt, ts1[cnt], events[cnt])
-
-        if row[1] in events:
-          events[row[1]].append(cnt)
-        else:
-          events[row[1]] = [cnt]
-          event_type[row[1]] = type_cnt
-          type_cnt += 1
-
-        f.write("%s,%d\n" % (row[0], event_type[row[1]]))
-        cnt += 1
+        #events[row[0]] = [row[1], row[2]]
+        f.write("%s,%d,%d\n" % (row[0], appType[row[1]], appType[row[2]]))
     f.close()
-    # print "\n".join(events.keys())
-
-    f = open(input_dir + filename + ".app_end_time_processed.txt", 'w')
-    with open(input_dir + filename + ".app_close_time.txt", 'rb') as csvfile:
-      spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-      cnt = 0
-      for row in spamreader:
-        # print ', '.join(row)
-        #ts1.append(float(row[0]))
-        event_ts.append(row[1])
-        # print "%d: %f, %s" % (cnt, ts1[cnt], events[cnt])
-
-        if row[1] in events:
-          events[row[1]].append(cnt)
-        else:
-          events[row[1]] = [cnt]
-          event_type[row[1]] = type_cnt
-          type_cnt += 1
-
-        f.write("%s,%d\n" % (row[0], event_type[row[1]]))
-        cnt += 1
-    f.close()
-
-
 
     ###################
     ## Read SensorLog Data
     ###################
     if DEBUG2: print "Read SensorLog Data"
 
-    ts2  = []
+    times  = []
     magx = []
     magy = []
     magz = []
-    f = open(input_dir + filename + ".mag_processed.txt", 'w')
-    with open(input_dir + filename + ".mag.txt", 'rb') as csvfile:
+    f = open(input_dir + filename + ".multi_mag_processed.txt", 'w')
+    with open(input_dir + filename + ".multi_mag.txt", 'rb') as csvfile:
       spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
       cnt = 0
       for row in spamreader:
         #print str(len(row)) + ", " + ', '.join(row)
 
+
         if len(row) < 10: continue
         if row[4] == "" or row[5] == "" or row[6] == "": continue
 
-        ts2.append(float(row[3]))
+        times.append(float(row[3]))
         magx.append(float(row[4]))
         magy.append(float(row[5]))
         magz.append(float(row[6]))
-        # print "%d: %f, %f, %f, %f" % (cnt, ts2[cnt], magx[cnt], magy[cnt], magz[cnt])
-        f.write("%f,%.15f,%.15f,%.15f\n" % (ts2[cnt], magx[cnt], magy[cnt], magz[cnt]))
-
+        # print "%d: %f, %f, %f, %f" % (cnt, times[cnt], magx[cnt], magy[cnt], magz[cnt])
+        f.write("%f,%.15f,%.15f,%.15f\n" % (times[cnt], magx[cnt], magy[cnt], magz[cnt]))
         cnt += 1
     f.close()

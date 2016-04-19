@@ -27,7 +27,7 @@ function [confusion_mat, corr_mat] = classify_event_self(filename)
     %% --------------------
     %% Constant
     %% --------------------
-    input_dir  = '../../data/preprocess_mag/data/';
+    input_dir  = '../preprocess_mag/data/';
     output_dir = './tmp/';
     fig_dir = './fig/';
 
@@ -100,20 +100,20 @@ function [confusion_mat, corr_mat] = classify_event_self(filename)
         confusion_mat(event_type1+1, cate_idx) = confusion_mat(event_type1+1, cate_idx) + 1;
     end
 
-    corr_mat = corr_mat ./ cnt_mat;
+    %corr_mat = corr_mat ./ cnt_mat;
 
-    % fig_idx = fig_idx + 1;
-    % fh = figure(fig_idx); clf;
+    %fig_idx = fig_idx + 1;
+    %fh = figure(fig_idx); clf;
 
-    % imagesc(corr_mat);
-    % colorbar;
+    %imagesc(corr_mat);
+    %colorbar;
 
 
-    % fig_idx = fig_idx + 1;
-    % fh = figure(fig_idx); clf;
+    %fig_idx = fig_idx + 1;
+    %fh = figure(fig_idx); clf;
 
-    % imagesc(confusion_mat);
-    % colorbar;
+    %imagesc(confusion_mat);
+    %colorbar;
 
 end
 

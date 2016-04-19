@@ -82,12 +82,16 @@ if __name__ == "__main__":
     ###################
     if DEBUG2: print "Read Event Time"
 
+    f = open(input_dir + filename + ".app_time_processed.txt", 'w')
     with open(input_dir + filename + ".app_time.txt", 'rb') as csvfile:
       spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
       cnt = 0
       for row in spamreader:
         event_type[row[1]] = appType[row[1]]
+        f.write("%s %d\n" % (row[0], appType[row[1]]))
         cnt += 1
+
+    f.close()
 
 
     ###################
@@ -104,10 +108,12 @@ if __name__ == "__main__":
         with open(input_dir + filename + "_" + app_name + ".mag.txt", 'rb') as csvfile:
           spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
           cnt = 0
+          spamreader = list(spamreader)
+          len(spamreader)
           for row in spamreader:
             if len(row) < 10:
-                if len(row) == 4:
-                    event_idxs[app_name].append(cnt)
+                #if len(row) == 4:
+                #    event_idxs[app_name].append(cnt)
                 continue
             elif row[4] == "" or row[5] == "" or row[6] == "": continue
 
@@ -115,21 +121,10 @@ if __name__ == "__main__":
             magx.append(float(row[4]))
             magy.append(float(row[5]))
             magz.append(float(row[6]))
-            #print "%d: %f, %f, %f, %f, %d" % (cnt, ts2[cnt], magx[cnt], magy[cnt], magz[cnt], app_label)
             f.write("%.15f,%.15f,%.15f,%.15f,%f\n" % (ts2[cnt], magx[cnt], magy[cnt], magz[cnt], float(app_label)))
             cnt += 1
         f.close()
 
 
-    ##################
-    ## Write Event_idxs
-    ##################
-    if DEBUG2: print "Write Time Data"
-    f = open(input_dir + filename + ".app_time_processed.txt", 'w')
-    #format: timestamp, class_label(0,1,2,..), event_idx
-    for app_name, idxs in event_idxs.items():
-        for idx in idxs:
-            f.write("%d %d\n" % (event_type[app_name], idx))
-    f.close()
 
 

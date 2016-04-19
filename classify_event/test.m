@@ -74,16 +74,16 @@ function test(filename)
     
     app_num = max(app_types)+1;
     
-    app_features = {};
-    for i = 1:app_num
-        if DEBUG5 == 1
-            break;
-        end
-        if length(app_mags{i}) > 0
-            current_app = app_mags{i};
-            app_features{i}= DBA(current_app, DBA_iteration);
-        end
-    end
+    %app_features = {};
+    %for i = 1:app_num
+     %   if DEBUG5 == 1
+      %      break;
+      %  end
+       % if length(app_mags{i}) > 0
+       %     current_app = app_mags{i};
+       %     app_features{i}= DBA(current_app, DBA_iteration);
+       % end
+   % end
     
     for i=1:app_num
         i_event_num = length(app_mags{i});
@@ -450,9 +450,9 @@ end
 
 function [app_mags,app_times, app_types] = read_mat_input(input_dir, filename)
     load([input_dir filename '.mat'], '-mat');
-    app_mags  = app_mag_s;
+    app_mags  = single_app_mag_s;
     app_times = app_time_s;
-    app_types = app_type_s;
+    app_types = single_app_type_s;
 end
 
 function fig_idx = plot_pics(app_mags, app_times, app_types, fig_idx)

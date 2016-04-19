@@ -32,115 +32,39 @@ my $SocketOpen = 1; ## use nc to receive socket data
 my $input_dir  = "";
 my $output_dir = "./gen";
 
-my @appNames = (
+my @programs = (
+    "/Applications/Microsoft Office 2011/Microsoft PowerPoint.app/Contents/MacOS/Microsoft PowerPoint",
+    "/Applications/Microsoft Office 2011/Microsoft Word.app/Contents/MacOS/Microsoft Word",
+    "/Applications/Microsoft Office 2011/Microsoft Excel.app/Contents/MacOS/Microsoft Excel",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Firefox.app/Contents/MacOS/firefox",
+    "/Applications/Safari.app/Contents/MacOS/Safari",
+    "/Applications/Skype.app/Contents/MacOS/Skype",
+    "/Applications/iTunes.app/Contents/MacOS/iTunes",
+    "/Applications/VLC.app/Contents/MacOS/VLC",
+    "/Applications/MPlayerX.app/Contents/MacOS/MPlayerX"
+    );
+my @program_names = (
     "PowerPoint",
     "Word",
     "Excel",
     "Chrome",
+    "Firefox",
+    "Safari",
     "Skype",
-    "QuickTimePlayer",
-    #"Safari",
-    #"iTunes",
-    #"OmniGraffle",
-    #"Texshop"
-    #"MPlayerX"
-    #"VLC",
-    #"Firefox",
+    "iTunes",
+    "VLC",
+    "MPlayer"
     );
 
-my %appPath = (
-    "PowerPoint" => "/Applications/Microsoft Office 2011/Microsoft PowerPoint.app/Contents/MacOS/Microsoft PowerPoint", 
-    "Word" => "/Applications/Microsoft Office 2011/Microsoft Word.app/Contents/MacOS/Microsoft Word",
-    "Excel" => "/Applications/Microsoft Office 2011/Microsoft Excel.app/Contents/MacOS/Microsoft Excel",
-    "Chrome" => "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "Skype" => "/Applications/Skype.app/Contents/MacOS/Skype",
-    "QuickTimePlayer" => "/Applications/QuickTime Player.app/Contents/MacOS/QuickTime Player"
-);
-
-
-my %appCount = (
-    "PowerPoint" => 0,
-    "Word" => 0,
-    "Excel" => 0,
-    "Chrome" => 0,
-    "Skype" => 0,
-    "QuickTimePlayer" => 0
-
-);
-
-my $openItvl = 6;
+my $openItvl = 8;
 my $closeItvl = 2;
-my $fileItvl = 2;
-my $std_time = [Time::HiRes::gettimeofday()];
 
 
 #############
 # Variables
 #############
 my $cmd;
-
-
-#############
-# Functions
-#############
-sub open_app {
-    #Argument: appName, fileName, sensorIP, sensorPort 
-    my $app_name = $_[0];
-    my $file_name = $_[1];
-    my $sensor_ip = $_[2];
-    my $sensor_port = $_[3]; 
-
-    my $app_path = $appPath{$app_name};
-    my $cmd = "$app_path";
-    $cmd =~ s/ /\\ /g;
-    $cmd .= "&";
-
-    #receive the sensorlog data
-    my $app_count = $appCount{$app_name}+1;
-    $appCount{$app_name} = $app_count;
-
-    if ($SocketOpen){
-        if ($app_count == 1){
-            # open a new file and write from the begining
-            system("nc $ARGV[2] $ARGV[3] > $output_dir/${file_name}_${app_name}.mag.txt &");
-        } 
-        else {
-            system("nc $ARGV[2] $ARGV[3] >> $output_dir/${file_name}_${app_name}.mag.txt &");
-        }
-    }
-
-
-    #run the application
-    system($cmd);
-
-    #sleep for a while
-    sleep($openItvl);
-
-    #stop logging to the file 
-    if ($SocketOpen){
-        system("killall -9 nc");
-    }
-
-    ## kill the application
-
-    $cmd = "ps | grep \"$app_path\"";
-    print "    $cmd\n";
-    my $ret = `$cmd`;
-    print "$ret\n";
-    my @tmp = split(/\s+/, $ret);
-    print "> ".$tmp[0]."\n";
-    $cmd = "kill -9 ".$tmp[0];
-    print "    $cmd\n";
-    `$cmd`;
-
-    #tag the count number and label to the file
-    $cmd = "echo \"Count,$app_count,Label,$app_name\" >> $output_dir/${file_name}_${app_name}.mag.txt";
-    system($cmd);
-
-    #sleep for a while
-    sleep($closeItvl);
-}
-
 
 
 #############
@@ -153,29 +77,91 @@ if(@ARGV != 4) {
 }
 my $filename = $ARGV[0];
 my $num_loop = $ARGV[1];
-my $sensorIp = $ARGV[2];
-my $sensorPort = $ARGV[3];
 
 
 #############
 # Main starts
 #############
 
-open FH, "> $output_dir/$filename.app_time.txt" or die $!;
+open FH, "> $output_dir/$filename.multi_app_time.txt" or die $!;
 
-foreach my $pi (0..@appNames-1){
-    my $appName = $appNames[$pi];
+if ($SocketOpen){
+    system("nc $ARGV[2] $ARGV[3] > $output_dir/$filename.multi_mag.txt &");
+}
 
-    ## open the app. Parameters: appName, fileName, sensorIP, sensorPort 
-    my $loop = $num_loop;
-    while ($loop --){
+my $std_time = [Time::HiRes::gettimeofday()];
+my $loop = $num_loop;
+while($loop --) {
+    foreach my $pi (0..@programs-2){
+        #open two programs at the same time
+        my $program = $programs[$pi];
+        my $next_program = $programs[$pi+1];
+
+
+        ## run the program
+        my $cmd1 = "$program";
+        $cmd1 =~ s/ /\\ /g;
+        $cmd1 .= "&";
+        print "  $loop/$num_loop: $cmd1\n";
+        system($cmd1);
+
+
+        my $cmd2 = "$next_program";
+        $cmd2 =~ s/ /\\ /g;
+        $cmd2 .= "&";
+        print "  $loop/$num_loop: $cmd2\n";
+        system($cmd2);
+
         ## request time
         my $curr_time = Time::HiRes::tv_interval($std_time);
-        print FH "$curr_time,".$appName."\n";
-        print "$curr_time,".$appName."\n";
-    
-        open_app($appName, $filename, $sensorIp, $sensorPort);
+        print FH "$curr_time,".$program_names[$pi].",".$program_names[$pi+1]."\n";
+        print "$curr_time,".$program_names[$pi].",".$program_names[$pi+1]."\n";
+
+
+        sleep($openItvl);
+
+        ## kill the program
+        my $cmd = "ps | grep \"$program\"";
+        print "    $cmd\n";
+        my $ret = `$cmd`;
+        print "$ret\n";
+
+        my @tmp = split(/\s+/, $ret);
+        if ($tmp[0] == ''){
+            print "tmp[0]>>>".$tmp[0].">>>"."\n";
+            $cmd = "kill -9 ".$tmp[1];
+        }
+        else{
+            $cmd = "kill -9 ".$tmp[0];
+        }
+
+        print "    $cmd\n";
+        `$cmd`;
+
+
+        $cmd = "ps | grep \"$next_program\"";
+        print "    $cmd\n";
+        my $ret = `$cmd`;
+        print "$ret\n";
+
+        my @tmp = split(/\s+/, $ret);
+
+
+        if ($tmp[0] == ''){
+            $cmd = "kill -9 ".$tmp[1];
+        }
+        else{
+            $cmd = "kill -9 ".$tmp[0];
+        }
+
+        print "    $cmd\n";
+        `$cmd`;
+
+        sleep($closeItvl);
     }
 }
 
 close FH;
+if ($SocketOpen){
+    system("killall -9 nc");
+}

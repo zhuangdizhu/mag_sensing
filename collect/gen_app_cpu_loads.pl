@@ -37,9 +37,9 @@ my @programs = (
     "/Applications/Microsoft Office 2011/Microsoft Word.app/Contents/MacOS/Microsoft Word",
     "/Applications/Microsoft Office 2011/Microsoft Excel.app/Contents/MacOS/Microsoft Excel",
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Safari.app/Contents/MacOS/Safari",
     "/Applications/Skype.app/Contents/MacOS/Skype",
     "/Applications/QuickTime Player.app/Contents/MacOS/QuickTime Player",
-    #"/Applications/Safari.app/Contents/MacOS/Safari",
     #"/Applications/iTunes.app/Contents/MacOS/iTunes",
     #"/Applications/OmniGraffle.app/Contents/MacOS/OmniGraffle",
     #"/Applications/TeX/TeXShop.app/Contents/MacOS/TeXShop"
@@ -52,9 +52,9 @@ my @program_names = (
     "Word",
     "Excel",
     "Chrome",
+    "Safari",
     "Skype",
     "QuickTimePlayer",
-    #"Safari",
     #"iTunes",
     #"OmniGraffle",
     #"Texshop"
@@ -78,7 +78,7 @@ my $cmd;
 #############
 if(@ARGV != 4) {
     print "Usage:   ./gen_app_cpu_loads.pl <FileName> <Num Loop> <MobileIP> <MobilePort>", "\n";
-    print "Example: ./gen_app_cpu_loads.pl file01 10 192.168.1.102 12345";
+    print "Example: ./gen_app_cpu_loads.pl file01 10 192.168.1.102 12345\n";
     exit;
 }
 my $filename = $ARGV[0];
@@ -89,7 +89,15 @@ my $num_loop = $ARGV[1];
 # Main starts
 #############
 
-open FH, "> $output_dir/$filename.app_time.txt" or die $!;
+#open fh, "> $output_dir/$filename.app_time.txt" or die $!;
+
+open(my $fh1, ">", "$output_dir/$filename.app_time.txt")
+    or die "cannot open $output_dir/$filename.app_close_time.txt";
+
+open(my $fh2, ">", "$output_dir/$filename.app_close_time.txt")
+    or die "cannot open $output_dir/$filename.app_close_time.txt";
+
+
 
 if ($SocketOpen){
     system("nc $ARGV[2] $ARGV[3] > $output_dir/$filename.mag.txt &");
@@ -109,7 +117,7 @@ while($loop --) {
 
         ## request time
         my $curr_time = Time::HiRes::tv_interval($std_time);
-        print FH "$curr_time,".$program_names[$pi]."\n";
+        print $fh1 "$curr_time,".$program_names[$pi]."\n";
         print "$curr_time,".$program_names[$pi]."\n";
 
 
@@ -122,17 +130,27 @@ while($loop --) {
         print "$ret\n";
 
         my @tmp = split(/\s+/, $ret);
-        print "> ".$tmp[0]."\n";
+        if ($tmp[0] == ''){
+            print "tmp[0]>>>".$tmp[0].">>>"."\n";
+            $cmd = "kill -9 ".$tmp[1];
+        }
+        else{
+            $cmd = "kill -9 ".$tmp[0];
+        }
 
-        $cmd = "kill -9 ".$tmp[0];
+        my $curr_time = Time::HiRes::tv_interval($std_time);
+        print $fh2 "$curr_time,".$program_names[$pi]."\n";
+        print "$curr_time,".$program_names[$pi]."\n";
         print "    $cmd\n";
+
         `$cmd`;
 
         sleep($closeItvl);
     }
 }
 
-close FH;
+close $fh1;
+close $fh2;
 if ($SocketOpen){
     system("killall -9 nc");
 }

@@ -130,8 +130,8 @@ sub open_app {
     my @tmp = split(/\s+/, $ret);
     print "> ".$tmp[0]."\n";
     $cmd = "kill -9 ".$tmp[0];
-    print "    $cmd\n";
-    `$cmd`;
+    #print "    $cmd\n";
+    system($cmd);
 
     #tag the count number and label to the file
     $cmd = "echo \"Count,$app_count,Label,$app_name\" >> $output_dir/${file_name}_${app_name}.mag.txt";
@@ -168,14 +168,54 @@ foreach my $pi (0..@appNames-1){
 
     ## open the app. Parameters: appName, fileName, sensorIP, sensorPort 
     my $loop = $num_loop;
+
+
+    my $app_path = $appPath{$appName};
+
+    #receive the sensorlog data
+    my $app_count = $appCount{$appName}+1;
+    $appCount{$appName} = $app_count;
+
+    system("nc $sensorIp $sensorPort > $output_dir/${filename}_${appName}.mag.txt &");
+
     while ($loop --){
-        ## request time
+        #run the application
+        my $cmd = "$app_path";
+        $cmd =~ s/ /\\ /g;
+        $cmd .= "&";
+        print "  $loop/$num_loop: $cmd\n";
+        system($cmd);
+
+        ## write event time
         my $curr_time = Time::HiRes::tv_interval($std_time);
         print FH "$curr_time,".$appName."\n";
         print "$curr_time,".$appName."\n";
-    
-        open_app($appName, $filename, $sensorIp, $sensorPort);
+
+        #sleep for a while
+        sleep($openItvl);
+
+        ## kill the application
+        $cmd = "ps | grep \"$app_path\"";
+
+        my $ret = `$cmd`;
+        print "$ret\n";
+
+        my @tmp = split(/\s+/, $ret);
+
+        $cmd = "kill -9 ".$tmp[0];
+        system($cmd);
+        print "    $cmd\n";
+
+        #sleep for a while
+        sleep($closeItvl);
     }
+
+    #stop logging to the file 
+    if ($SocketOpen){
+        system("killall -9 nc");
+    }
+    sleep (2);
+
 }
 
 close FH;
