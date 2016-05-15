@@ -54,14 +54,13 @@ def force_utf8_hack():
 ## Main
 ###################
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        sys.exit('Usage:    preprocess_sensorlog_file.py <FileName> <magFileName>')
+    if len(sys.argv) != 2:
+        sys.exit('Usage:    preprocess_sensorlog_socket.py <FileName>')
         sys.exit(1)
 
     force_utf8_hack()
 
     filename = sys.argv[1]
-    magFileName = sys.argv[2]
     if DEBUG2: print "Preprocess: %s" % (filename)
 
 
@@ -70,8 +69,6 @@ if __name__ == "__main__":
     ###################
     if DEBUG2: print "Read Event Time"
 
-    # fh = open(input_dir + filename + ".app_time.txt", 'r')
-    ts1        = []
     event_ts   = []
     events     = dict()  ## event and its indices
     event_type = dict()  ## event and its type
@@ -98,6 +95,27 @@ if __name__ == "__main__":
     f.close()
     # print "\n".join(events.keys())
 
+    #f = open(input_dir + filename + ".app_end_time_processed.txt", 'w')
+    #with open(input_dir + filename + ".app_close_time.txt", 'rb') as csvfile:
+    #  spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+    #  cnt = 0
+    #  for row in spamreader:
+    #    # print ', '.join(row)
+    #    #ts1.append(float(row[0]))
+    #    event_ts.append(row[1])
+    #    # print "%d: %f, %s" % (cnt, ts1[cnt], events[cnt])
+
+    #    if row[1] in events:
+    #      events[row[1]].append(cnt)
+    #    else:
+    #      events[row[1]] = [cnt]
+    #      event_type[row[1]] = type_cnt
+    #      type_cnt += 1
+
+    #    f.write("%s,%d\n" % (row[0], event_type[row[1]]))
+    #    cnt += 1
+    #f.close()
+
 
 
     ###################
@@ -110,21 +128,23 @@ if __name__ == "__main__":
     magy = []
     magz = []
     f = open(input_dir + filename + ".mag_processed.txt", 'w')
-    with open(magFileName,'rb') as csvfile:
+    #with open(input_dir + filename + ".mag.txt", 'rb') as csvfile:
+    with open(input_dir + filename + ".mag.csv", 'rb') as csvfile:
       spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+      spamreader = list(spamreader)
+      spamreader.pop(0)
       cnt = 0
       for row in spamreader:
-        # print str(len(row)) + ", " + ', '.join(row)
+        #print str(len(row)) + ", " + ', '.join(row)
 
         if len(row) < 10: continue
-        if re.search("loggingTime", row[0]) is not None: continue
         if row[4] == "" or row[5] == "" or row[6] == "": continue
 
         ts2.append(float(row[3]))
         magx.append(float(row[4]))
         magy.append(float(row[5]))
         magz.append(float(row[6]))
-        # print "> %d: %f, %f, %f, %f" % (cnt, ts2[cnt], magx[cnt], magy[cnt], magz[cnt])
+        # print "%d: %f, %f, %f, %f" % (cnt, ts2[cnt], magx[cnt], magy[cnt], magz[cnt])
         f.write("%f,%.15f,%.15f,%.15f\n" % (ts2[cnt], magx[cnt], magy[cnt], magz[cnt]))
 
         cnt += 1

@@ -75,9 +75,12 @@ if __name__ == "__main__":
     appType['Word'] = 1
     appType['Excel'] = 2
     appType['Chrome'] = 3
-    appType['Safari'] = 4
-    appType['Skype'] = 5
-    appType['QuickTimePlayer'] = 6
+    appType['Firefox']=4
+    appType['Safari'] = 5
+    appType['Skype'] = 6
+    appType['iTunes']= 7
+    appType['VLC']=8
+    appType['MPlayer']=9
 
     #events     = collections.defaultdict(list)  ## event and its indices
     f = open(input_dir + filename + ".multi_app_time_processed.txt", 'w')

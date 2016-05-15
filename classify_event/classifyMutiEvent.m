@@ -10,6 +10,7 @@
 %%  classify_multi_app('0418')
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function [confusion_mat, corr_mat] = classify_multi_app(filename)
     %% --------------------
     %% DEBUG
@@ -31,8 +32,8 @@ function [confusion_mat, corr_mat] = classify_multi_app(filename)
     fig_dir = './fig/';
     fig_idx = 0;
     font_size = 28;
-    subplot_title = {'Mag-X', 'Mag-Y', 'Mag-Z', 'Sythesized Mag'}
-
+    subplot_title = {'Mag-X', 'Mag-Y', 'Mag-Z', 'Sythesized Mag'};
+    
 
     %% --------------------
     %% Check input
@@ -50,22 +51,23 @@ function [confusion_mat, corr_mat] = classify_multi_app(filename)
     single_mags = {};
     avg_single_mags = {};
     
-    %[multi_app_mags, multi_app_types] = read_multi_mat_input(input_dir,filename);
-    [single_app_mags, single_end_mags, single_app_types] = read_single_mat_input(input_dir,filename);
+    [multi_app_mags, multi_app_types] = read_multi_mat_input(input_dir,filename);
+    [single_app_mags, single_app_types] = read_single_mat_input(input_dir,filename);
     
     
-    %[multi_mags, avg_multi_mags, fig_idx] = plot_events(multi_app_types, multi_app_mags, 'multiple', fig_idx, DEBUG3, DEBUG4);
-    
-    [single_mags, avg_single_mags, fig_idx] = plot_events(single_app_types, single_app_mags, 'single', fig_idx, DEBUG3, DEBUG4);
+    [multi_mags, avg_multi_mags, fig_idx] = plot_signal_in_seperate(multi_app_types, multi_app_mags, 'multiple', fig_idx, DEBUG3, DEBUG4);
     
     pause
-    [end_mags,avg_end_mags, fig_idx] = plot_events(single_app_types, single_end_mags, 'endApp', fig_idx, DEBUG3, DEBUG4);
+    
+    [single_mags, avg_single_mags, fig_idx] = plot_signal_in_seperate(single_app_types, single_app_mags, 'single', fig_idx, DEBUG3, DEBUG4);
+    
+    
+    %[end_mags,avg_end_mags, fig_idx] = plot_events(single_app_types, single_end_mags, 'endApp', fig_idx, DEBUG3, DEBUG4);
     
     fprintf('Seperation complete. Press any button to continue, or Ctr+C to exit\n');
     pause
-    if DEBUG7 == 1
-        return;
-    end
+
+    
     %% -------------------
     %% Time Interpolation
     %% -------------------
@@ -150,16 +152,113 @@ function [confusion_mat, corr_mat] = classify_multi_app(filename)
             str = [subplot_title(4), ' of App ', num2str(app_idx), '&', num2str(app_idx+1)];
             title(str);
             legend('Calculated Sum - Red', 'Real Merged App - Green');
-            fprintf('Plot complete. Press any button to continue, or Ctr+C to exit\n');
-            pause 
+            %fprintf('Plot complete. Press any button to continue, or Ctr+C to exit\n');
+            %pause 
         end
         
      end
        
 end
 
+function [mags, avg_mags, fig_idx] =plot_signal_in_seperate(app_types, app_mags, appPattern, fig_idx, DEBUG3, DEBUG4, DEBUG5)
+    subplot_color = {'-b.', '-g.', '-y.', '-r.'};
+    subplot_title = {'Mag-X', 'Mag-Y', 'Mag-Z', 'Sythesized Mag'};
+    mags = {};
+    avg_mags = {};
+    for i = 1:length(app_types)
+        mags{end+1} = {};
+        avg_new_mags = {};
+        time_idxs = [];
+        
+        for ii = 1:length(app_mags{i})
+            time_i = app_mags{i}{ii}(:,1);
+            time_idxs = [time_idxs;time_i];
+        end
+        
+        time_idxs = unique(sort(time_idxs));
+        
+        for ii = 1:length(app_mags{i})
+            ii_mag = app_mags{i}{ii};
+            time_i = ii_mag(:,1);
+            
+            [t, index] = unique(sort(time_i),'first');
+            curr_mag = [];
+            curr_mag(:,1) = time_idxs;
+            
+            for mi = 2:4
+                %tmp(:,mi) = interp1(new_mags(:,1), new_mags(:,mi), tmp(:,1));
+                curr_mag(:,mi) = interp1(ii_mag(index,1), ii_mag(index,mi), time_idxs(:,1));
+                curr_mag(:,mi) = curr_mag(:,mi) - min(curr_mag(:,mi));
+                avg_new_mags{end+1}=[];
+            end
+    
+            curr_mag(:,5) = sqrt(curr_mag(:,2).^2 + curr_mag(:,3).^2 + curr_mag(:,4).^2);
+            avg_new_mags{end+1} = [];
+            curr_mag(:,6) = curr_mag(:,5) - min(curr_mag(:,5));
+            curr_mag(:,6) = curr_mag(:,6) / max(curr_mag(:,6));
+            avg_new_mags{end+1} = [];
+            
+            mags{i}{ii} = curr_mag;
+            
+            %length(curr_mag)
+            for mi=1:6
+            avg_new_mags{mi}(:,ii) = curr_mag(:,mi);% Sythesized EM Signal
+            end
+        end
+        
+        if DEBUG3 == 1
+            fig_idx = fig_idx + 1;
+            fh = figure(fig_idx); clf;
+            for ii = 1:length(app_mags{i})
+                curr_mag = mags{i}{ii};
+                
+                for mi=2:4
+                    subplot(2,2,mi-1);                   
+                    plot(curr_mag(:,1), curr_mag(:,mi), subplot_color{mi-1});
+                    
+                    if ii == 1
+                        hold on;
+                    elseif ii == length(app_mags{i})
+                        xlabel('Sample points');
+                        ylabel('Magnitude');
+            
+                        if strcmp(appPattern, 'multiple') == 1
+                            str = [' Signal of App ', num2str(i), '&',num2str(i+1)];
+                        else
+                            str = [' Signal of App ', num2str(i)];
+                        end           
+                        title(str);
+                        legend(subplot_title{mi-1});
+                    end
+                end
+                subplot(2,2,4);
+                plot(curr_mag(:,1), curr_mag(:,6), subplot_color{4});
+                if ii == 1
+                    hold on;
+                elseif ii == length(app_mags{i})
+                    xlabel('Sample points');
+                    ylabel('Magnitude');
+            
+                    if strcmp(appPattern, 'multiple') == 1
+                         str = [' Signal of App ', num2str(i), '&',num2str(i+1)];
+                    else
+                        str = [' Signal of App ', num2str(i)];
+                    end           
+                        title(str);
+                        legend(subplot_title{4});
+                end
+            end
+        end
+        
+        for mi=2:6
+            avg_new_mags{mi} = mean(avg_new_mags{mi},2);
+            avg_mags{i} = avg_new_mags;
+        end
 
-function [mags, avg_mags, fig_idx] = plot_events(app_types, app_mags, appPattern, fig_idx, DEBUG3, DEBUG4, DEBUG5)
+            
+    end
+end
+function [mags, avg_mags, fig_idx] = plot_signal_in_group(app_types, app_mags, appPattern, fig_idx, DEBUG3, DEBUG4, DEBUG5)
     mags = {};
     avg_mags = {};
     for i = 1:length(app_types)
@@ -253,11 +352,11 @@ function [mags, avg_mags, fig_idx] = plot_events(app_types, app_mags, appPattern
             
     end
 end
-function [single_app_mags, single_end_mags, single_app_types] = read_single_mat_input(input_dir, filename)
+function [single_app_mags, single_app_types] = read_single_mat_input(input_dir, filename)
     load([input_dir filename '_single_app.mat'], '-mat');
     single_app_mags  = single_app_mag_s;
     single_app_types = single_app_type_s;
-    single_end_mags = single_end_mag_s;
+    %single_end_mags = single_end_mag_s;
 end
 function [multi_app_mags, multi_app_types] = read_multi_mat_input(input_dir, filename)
     load([input_dir filename '_multi_app.mat'], '-mat');

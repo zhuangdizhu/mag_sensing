@@ -23,7 +23,7 @@ function separate_events(filename)
     DEBUG2 = 1;  %% progress
     DEBUG3 = 1;  %% verbose
     DEBUG4 = 1;  %% results
-
+    DEBUG6 = 0;
 
     %% --------------------
     %% Constant
@@ -39,14 +39,14 @@ function separate_events(filename)
     single_app_mag_s = {};
     app_type_s = {};
     appInterval = 8;
-    endInterval = 10;
+    endInterval = 2;
     
-    openSleep = 10;
-    endSleep = 10;
+    %openSleep = 10;
+    %endSleep = 10;
     %% --------------------
     %% Check input
     %% --------------------
-    if nargin < 1, filename = '0417'; end
+    if nargin < 1, filename = '20160420.exp02'; end
 
 
     %% --------------------
@@ -59,10 +59,10 @@ function separate_events(filename)
     if DEBUG2, fprintf('Read Event Time\n'); end
 
     event_time = load([input_dir filename '.app_time_processed.txt']);
-    end_time = load([input_dir filename '.app_end_time_processed.txt']);
+    %end_time = load([input_dir filename '.app_end_time_processed.txt']);
     
     event_time(:,1) = event_time(:,1) - event_time(1,1);    
-    end_time(:,1) = end_time(:,1) -  end_time(1,1);
+    %end_time(:,1) = end_time(:,1) -  end_time(1,1);
     
     
     events = unique(sort(event_time(:,2)));
@@ -83,9 +83,11 @@ function separate_events(filename)
         fprintf('Vacant File.\n');
         return
     end
-    
+    %time shift
     mags(:,1) = mags(:,1) - mags(1,1);
     fs = size(mags,1) / mags(end,1);
+    
+    %sythesized signal
     mags(:,5) = sqrt(mags(:,2).^2 + mags(:,3).^2 + mags(:,4).^2);
 
     fprintf('  size: %dx%d\n', size(mags));
@@ -94,6 +96,7 @@ function separate_events(filename)
     fprintf('Paused, press any key to continue or use Ctrl-C to stop\n');
     pause;
     %%%%%%
+    
     %% PLOT
     fig_idx = fig_idx + 1;
     fh = figure(fig_idx); clf;
@@ -137,23 +140,24 @@ function separate_events(filename)
     event_time(:, 2:3) = tmp;
     event_time(:, 2) = event_time(:, 2) + std_event_time;
     
-    tmp = end_time;
-    end_time(:,2:3) = tmp;
-    end_time(:,2) = end_time(:,2) + event_time(1,2) + openSleep;
+    %tmp = end_time;
+    %end_time(:,2:3) = tmp;
+    %end_time(:,2) = end_time(:,2) + event_time(1,2) + appInterval;
+    
     %% --------------------
     %% Interpolation
     %% --------------------
     if DEBUG2, fprintf('Interpolation\n'); end
 
     tmp = [];
-    tmp(:,1) = unique(sort([event_time(:,2); end_time(:,2); new_mags(:,1)]));%interpolated time
+    tmp(:,1) = unique(sort([event_time(:,2); new_mags(:,1)]));%interpolated time
+    %tmp(:,1) = unique(sort([event_time(:,2); end_time(:,2); new_mags(:,1)]));
     
     %Funciton "interp1" requires the first parameter to be strictly monotonic increasing.
     % find the index of the strict-increasing time 
     [t, index] = unique(sort(new_mags(:,1)),'first');
         
     for mi = 2:4
-        %tmp(:,mi) = interp1(new_mags(:,1), new_mags(:,mi), tmp(:,1));
         tmp(:,mi) = interp1(new_mags(index,1), new_mags(index,mi), tmp(:,1));
     end
     
@@ -174,12 +178,12 @@ function separate_events(filename)
         event_time(ti, 1) = idx;
     end
     
-    for ti = 1:size(end_time,1)
-        idx = find(new_mags(:,1) == end_time(ti,2));
-        end_time(ti,1) = idx;
-    end
+    %for ti = 1:size(end_time,1)
+    %    idx = find(new_mags(:,1) == end_time(ti,2));
+    %    end_time(ti,1) = idx;
+    %end
     %%%%%%
-    fprintf('Paused, press any key to continue or use Ctrl-C to stop\n');
+    fprintf('Find Event Index finished, press any key to continue or use Ctrl-C to stop\n');
     pause;
     
     
@@ -198,8 +202,8 @@ function separate_events(filename)
     title('EM Signal of Interpolated Data');
     legend('Red: Synthesize Signal','Blue: M-X','Green:M-Y','Yellow::M-Z');
 
-    dlmwrite([output_dir filename '.mag.txt'], [new_mags(:, [1,6])], 'delimiter', '\t');
-    dlmwrite([output_dir filename '.app_time.txt'], [event_time], 'delimiter', '\t');
+    %dlmwrite([output_dir filename '.mag.txt'], [new_mags(:, [1,6])], 'delimiter', '\t');
+    %dlmwrite([output_dir filename '.app_time.txt'], [event_time], 'delimiter', '\t');
 
     %% --------
     %% Seperate Start Events
@@ -231,6 +235,7 @@ function separate_events(filename)
     %% ---------------
     %% Seperate End Events
     %% ---------------
+    if DEBUG6 == 1
     for i = 1:size(events,1)
         single_end_mag_s{i} = {};
     end
@@ -253,9 +258,12 @@ function separate_events(filename)
         
         single_end_mag_s{event_type+1}{end+1} = mag_traces;
     end
-    length(single_end_mag_s)
-
-    save ([output_dir filename '_single_app.mat'], 'single_app_mag_s', 'single_end_mag_s', 'single_app_type_s','-mat');
+    
+    %length(single_end_mag_s)
+    end
+    
+    save ([output_dir filename '_single_app.mat'], 'single_app_mag_s', 'single_app_type_s','-mat');
+    %save ([output_dir filename '_single_app.mat'], 'single_app_mag_s', 'single_end_mag_s', 'single_app_type_s','-mat');
 end
 
 

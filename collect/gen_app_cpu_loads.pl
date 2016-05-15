@@ -92,7 +92,7 @@ my $num_loop = $ARGV[1];
 #open fh, "> $output_dir/$filename.app_time.txt" or die $!;
 
 open(my $fh1, ">", "$output_dir/$filename.app_time.txt")
-    or die "cannot open $output_dir/$filename.app_close_time.txt";
+    or die "cannot open $output_dir/$filename.app_time.txt";
 
 open(my $fh2, ">", "$output_dir/$filename.app_close_time.txt")
     or die "cannot open $output_dir/$filename.app_close_time.txt";
@@ -131,7 +131,7 @@ while($loop --) {
 
         my @tmp = split(/\s+/, $ret);
         if ($tmp[0] == ''){
-            print "tmp[0]>>>".$tmp[0].">>>"."\n";
+            #print "tmp[0]>>>".$tmp[0].">>>"."\n";
             $cmd = "kill -9 ".$tmp[1];
         }
         else{

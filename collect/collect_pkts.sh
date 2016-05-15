@@ -1,1 +1,0 @@
-sudo tcpdump -i en5 -s 100 -w tmp.pcap 

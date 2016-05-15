@@ -71,8 +71,8 @@ my $cmd;
 # check input
 #############
 if(@ARGV != 4) {
-    print "Usage:   ./gen_app_cpu_loads.pl <FileName> <Num Loop> <MobileIP> <MobilePort>", "\n";
-    print "Example: ./gen_app_cpu_loads.pl file01 10 192.168.1.102 12345\n";
+    print "Usage:   ./gen_multi_app_cpu_loads.pl <FileName> <Num Loop> <MobileIP> <MobilePort>", "\n";
+    print "Example: ./gen_multi_app_cpu_loads.pl file01 10 192.168.1.102 12345\n";
     exit;
 }
 my $filename = $ARGV[0];
@@ -83,7 +83,11 @@ my $num_loop = $ARGV[1];
 # Main starts
 #############
 
-open FH, "> $output_dir/$filename.multi_app_time.txt" or die $!;
+open(my $fh1, ">", "$output_dir/$filename.multi_app_time.txt")
+    or die "cannot open $output_dir/$filename.multi_app_time.txt";
+
+open(my $fh2, ">", "$output_dir/$filename.multi_app_close_time.txt")
+    or die "cannot open $output_dir/$filename.multi_app_close_time.txt";
 
 if ($SocketOpen){
     system("nc $ARGV[2] $ARGV[3] > $output_dir/$filename.multi_mag.txt &");
@@ -114,7 +118,7 @@ while($loop --) {
 
         ## request time
         my $curr_time = Time::HiRes::tv_interval($std_time);
-        print FH "$curr_time,".$program_names[$pi].",".$program_names[$pi+1]."\n";
+        print $fh1 "$curr_time,".$program_names[$pi].",".$program_names[$pi+1]."\n";
         print "$curr_time,".$program_names[$pi].",".$program_names[$pi+1]."\n";
 
 
@@ -128,7 +132,7 @@ while($loop --) {
 
         my @tmp = split(/\s+/, $ret);
         if ($tmp[0] == ''){
-            print "tmp[0]>>>".$tmp[0].">>>"."\n";
+            #print "tmp[0]>>>".$tmp[0].">>>"."\n";
             $cmd = "kill -9 ".$tmp[1];
         }
         else{
@@ -154,14 +158,20 @@ while($loop --) {
             $cmd = "kill -9 ".$tmp[0];
         }
 
+
+        my $curr_time = Time::HiRes::tv_interval($std_time);
+        print $fh2 "$curr_time,".$program_names[$pi].",".$program_names[$pi+1]."\n";
+        print "$curr_time,".$program_names[$pi].",".$program_names[$pi+1]."\n";
         print "    $cmd\n";
+
         `$cmd`;
 
         sleep($closeItvl);
     }
 }
 
-close FH;
+close $fh1;
+close $fh2;
 if ($SocketOpen){
     system("killall -9 nc");
 }

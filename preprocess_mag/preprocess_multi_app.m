@@ -19,7 +19,7 @@ function preprocess_multi_app(filename)
     %% DEBUG
     %% --------------------
     DEBUG0 = 0;
-    DEBUG1 = 1;
+    DEBUG1 = 0;
     DEBUG2 = 1;     %% progress
     DEBUG3 = 1;     %% verbose
     DEBUG4 = 1;     %% results
@@ -37,15 +37,14 @@ function preprocess_multi_app(filename)
     %% --------------------
     fig_idx = 0;
     appInterval = 8;
+    endInterval = 2;
     multi_app_mag_s = {};
     app_type_s      = {};
 
     %% --------------------
     %% Check input
     %% --------------------
-    if nargin < 1, filename = 'file03'; end
-
-
+    if nargin < 1, filename = '20160420.exp02'; end
     %% --------------------
     %% Main starts
     %% --------------------
@@ -58,6 +57,11 @@ function preprocess_multi_app(filename)
     event_time = load([input_dir filename '.multi_app_time_processed.txt']);
     event_time(:,1) = event_time(:,1) - event_time(1,1);
 
+    %end_time = load([input_dir filename '.multi_app_close_time_processed.txt']);   
+    %end_time(:,1) = end_time(:,1) -  end_time(1,1);
+    
+    
+    
     first_events = unique(sort(event_time(:,2)));
     next_events = first_events+1;
     fprintf('  size: %dx%d\n', size(event_time));
@@ -112,7 +116,7 @@ function preprocess_multi_app(filename)
 
 
     %% --------------------
-    %% Find Start Event
+    %% Find Start and End Event
     %% --------------------
     if DEBUG2, fprintf('Find Start Event\n'); end
 
@@ -123,10 +127,9 @@ function preprocess_multi_app(filename)
     std_event_idx = std_event_idx + manual_offset(filename);
     std_event_time = new_mags(std_event_idx);
 
-    %tmp = event_time;
-    %event_time(:, 2:3) = tmp;
     event_time(:, 1) = event_time(:, 1) + std_event_time;
-
+    %end_time(:,1) = end_time(:,1) + std_event_time + appInterval;
+    
 
     %% --------------------
     %% Interpolation
@@ -135,15 +138,14 @@ function preprocess_multi_app(filename)
 
     tmp = [];
     tmp(:,1) = unique(sort([event_time(:,1); new_mags(:,1)]));%interpolated time
-    
+    %%%%%tmp(:,1) = unique(sort([event_time(:,1); end_time(:,1); new_mags(:,1)]));
     %Funciton "interp1" requires the first parameter to be strictly monotonic increasing.
     % find the index of the strict-increasing time 
     [t, index] = unique(sort(new_mags(:,1)),'first');
         
     for mi = 2:4
-        %tmp(:,mi) = interp1(new_mags(:,1), new_mags(:,mi), tmp(:,1));
         tmp(:,mi) = interp1(new_mags(index,1), new_mags(index,mi), tmp(:,1));
-        tmp(:,mi) = tmp(:,mi) - min(tmp(:,mi));
+        tmp(:,mi) = tmp(:,mi) - min(tmp(:,mi));%%%%%different from single mode
     end
 
     tmp(:,5) = sqrt(tmp(:,2).^2 + tmp(:,3).^2 + tmp(:,4).^2);
@@ -163,6 +165,13 @@ function preprocess_multi_app(filename)
         event_time(ti, 4) = idx;
     end
     %%%%%%
+        
+    %for ti = 1:size(end_time,1)
+    %    idx = find(new_mags(:,1) == end_time(ti,1));
+    %    end_time(ti,4) = idx;
+    %end
+    %%%%%%
+    
     fprintf('Paused, press any key to continue or use Ctrl-C to stop\n');
     pause;
     
@@ -201,10 +210,10 @@ function preprocess_multi_app(filename)
 
         mag_traces = new_mags(range_idx,:);
         
-        %for mi=1:4
-         %   mag_traces(:,mi) = mag_traces(:,mi) - min(mag_traces(:,mi));
-        %end
-        mag_traces
+        for mi=1:4
+            mag_traces(:,mi) = mag_traces(:,mi) - min(mag_traces(:,mi));
+        end
+
         mag_traces(:,5) = sqrt(mag_traces(:,2).^2 + mag_traces(:,3).^2 + mag_traces(:,4).^2);
         mag_traces(:,6) = mag_traces(:,5) - min(mag_traces(:,5));
         mag_traces(:,6) = mag_traces(:,6) / max(mag_traces(:,6));
@@ -212,8 +221,37 @@ function preprocess_multi_app(filename)
         multi_app_mag_s{first_event_type+1}{end+1} = mag_traces;
     end
     
+    %% ---------------
+    %% Seperate End Events
+    %% ---------------
+    if DEBUG1 == 1
+    for i = 1:size(first_events,1)
+        multi_end_mag_s{i} = {};
+    end
+    
+    for ti = 1:size(end_time,1)
+        
+        curr_time = end_time(ti, 1);
+        first_event_type = end_time(ti, 2);
+        
+        range_idx = find(new_mags(:,1) >= curr_time & new_mags(:,1) <= (curr_time + endInterval));
+
+        mag_traces = new_mags(range_idx,:);
+        %% --normalization
+        for mi=1:4
+            mag_traces(:,mi) = mag_traces(:,mi) - min(mag_traces(:,mi));
+        end
+        mag_traces(:,5) = sqrt(mag_traces(:,2).^2 + mag_traces(:,3).^2 + mag_traces(:,4).^2);
+        mag_traces(:,6) = mag_traces(:,5) - min(mag_traces(:,5));
+        mag_traces(:,6) = mag_traces(:,6) / max(mag_traces(:,6));
+        
+        multi_end_mag_s{event_type+1}{end+1} = mag_traces;
+    end
+    end
+    
     multi_app_type_s = first_events;
     save ([output_dir filename '_multi_app.mat'], 'multi_app_mag_s', 'multi_app_type_s','-mat');
+    %save ([output_dir filename '_multi_app.mat'], 'multi_app_mag_s', 'multi_end_mag_s', 'multi_app_type_s','-mat');
 end
 
 
