@@ -44,7 +44,6 @@ function [confusion_mat, corr_mat] = classify_multi_app(filename)
     %% --------------------
     %% Main starts
     %% --------------------
-    disp('Main Starts---------------------------')
     multi_mags = {};
     avg_multi_mags = {};
     
@@ -55,10 +54,7 @@ function [confusion_mat, corr_mat] = classify_multi_app(filename)
     [single_app_mags, single_app_types] = read_single_mat_input(input_dir,filename);
     
     
-    [multi_mags, avg_multi_mags, fig_idx] = plot_signal_in_seperate(multi_app_types, multi_app_mags, 'multiple', fig_idx, DEBUG3, DEBUG4);
-    
-    pause
-    
+    [multi_mags, avg_multi_mags, fig_idx] = plot_signal_in_seperate(multi_app_types, multi_app_mags, 'multiple', fig_idx, DEBUG3, DEBUG4);    
     [single_mags, avg_single_mags, fig_idx] = plot_signal_in_seperate(single_app_types, single_app_mags, 'single', fig_idx, DEBUG3, DEBUG4);
     
     
@@ -165,6 +161,7 @@ function [mags, avg_mags, fig_idx] =plot_signal_in_seperate(app_types, app_mags,
     subplot_title = {'Mag-X', 'Mag-Y', 'Mag-Z', 'Sythesized Mag'};
     mags = {};
     avg_mags = {};
+    
     for i = 1:length(app_types)
         mags{end+1} = {};
         avg_new_mags = {};
@@ -176,6 +173,10 @@ function [mags, avg_mags, fig_idx] =plot_signal_in_seperate(app_types, app_mags,
         end
         
         time_idxs = unique(sort(time_idxs));
+        %time_idxs is the common time index for all data belonging to the
+        %same app
+        
+        
         
         for ii = 1:length(app_mags{i})
             ii_mag = app_mags{i}{ii};
@@ -188,12 +189,13 @@ function [mags, avg_mags, fig_idx] =plot_signal_in_seperate(app_types, app_mags,
             for mi = 2:4
                 %tmp(:,mi) = interp1(new_mags(:,1), new_mags(:,mi), tmp(:,1));
                 curr_mag(:,mi) = interp1(ii_mag(index,1), ii_mag(index,mi), time_idxs(:,1));
-                curr_mag(:,mi) = curr_mag(:,mi) - min(curr_mag(:,mi));
+                curr_mag(:,mi) = curr_mag(:,mi) - mean(curr_mag(:,mi));
                 avg_new_mags{end+1}=[];
             end
     
             curr_mag(:,5) = sqrt(curr_mag(:,2).^2 + curr_mag(:,3).^2 + curr_mag(:,4).^2);
             avg_new_mags{end+1} = [];
+            
             curr_mag(:,6) = curr_mag(:,5) - min(curr_mag(:,5));
             curr_mag(:,6) = curr_mag(:,6) / max(curr_mag(:,6));
             avg_new_mags{end+1} = [];
@@ -202,7 +204,7 @@ function [mags, avg_mags, fig_idx] =plot_signal_in_seperate(app_types, app_mags,
             
             %length(curr_mag)
             for mi=1:6
-            avg_new_mags{mi}(:,ii) = curr_mag(:,mi);% Sythesized EM Signal
+                avg_new_mags{mi}(:,ii) = curr_mag(:,mi);% Sythesized EM Signal
             end
         end
         
@@ -226,13 +228,14 @@ function [mags, avg_mags, fig_idx] =plot_signal_in_seperate(app_types, app_mags,
                             str = [' Signal of App ', num2str(i), '&',num2str(i+1)];
                         else
                             str = [' Signal of App ', num2str(i)];
-                        end           
+                        end  
                         title(str);
                         legend(subplot_title{mi-1});
                     end
                 end
                 subplot(2,2,4);
                 plot(curr_mag(:,1), curr_mag(:,6), subplot_color{4});
+                
                 if ii == 1
                     hold on;
                 elseif ii == length(app_mags{i})
@@ -258,6 +261,8 @@ function [mags, avg_mags, fig_idx] =plot_signal_in_seperate(app_types, app_mags,
             
     end
 end
+
+
 function [mags, avg_mags, fig_idx] = plot_signal_in_group(app_types, app_mags, appPattern, fig_idx, DEBUG3, DEBUG4, DEBUG5)
     mags = {};
     avg_mags = {};

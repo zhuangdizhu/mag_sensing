@@ -85,7 +85,7 @@ function [confusion_mat, corr_mat] = classify_event_self(filename)
             ts1 = ts1(1:len);
             ts2 = ts2(1:len);
 
-            r = corrcoef(ts1, ts2);
+            r = corrcoef(ts1, ts2)
             r = r(1,2);
 
             corr_mat(event_type1+1, event_type2+1) = corr_mat(event_type1+1, event_type2+1) + r;
@@ -100,20 +100,19 @@ function [confusion_mat, corr_mat] = classify_event_self(filename)
         confusion_mat(event_type1+1, cate_idx) = confusion_mat(event_type1+1, cate_idx) + 1;
     end
 
-    %corr_mat = corr_mat ./ cnt_mat;
+    corr_mat = corr_mat ./ cnt_mat;
 
-    %fig_idx = fig_idx + 1;
-    %fh = figure(fig_idx); clf;
+     fig_idx = fig_idx + 1;
+    fh = figure(fig_idx); clf;
+    imagesc(corr_mat);
+    colorbar;
 
-    %imagesc(corr_mat);
-    %colorbar;
 
+    fig_idx = fig_idx + 1;
+    fh = figure(fig_idx); clf;
 
-    %fig_idx = fig_idx + 1;
-    %fh = figure(fig_idx); clf;
-
-    %imagesc(confusion_mat);
-    %colorbar;
+    imagesc(confusion_mat);
+    colorbar;
 
 end
 

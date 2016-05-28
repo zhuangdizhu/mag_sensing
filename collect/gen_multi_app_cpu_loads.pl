@@ -33,16 +33,17 @@ my $input_dir  = "";
 my $output_dir = "./gen";
 
 my @programs = (
-    "/Applications/Microsoft Office 2011/Microsoft PowerPoint.app/Contents/MacOS/Microsoft PowerPoint",
-    "/Applications/Microsoft Office 2011/Microsoft Word.app/Contents/MacOS/Microsoft Word",
-    "/Applications/Microsoft Office 2011/Microsoft Excel.app/Contents/MacOS/Microsoft Excel",
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "/Applications/Firefox.app/Contents/MacOS/firefox",
+    #"/Applications/Microsoft Office 2011/Microsoft PowerPoint.app/Contents/MacOS/Microsoft PowerPoint",
+    #"/Applications/Microsoft Office 2011/Microsoft Word.app/Contents/MacOS/Microsoft Word",
+    #"/Applications/Microsoft Office 2011/Microsoft Excel.app/Contents/MacOS/Microsoft Excel",
+    #"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    #"/Applications/Firefox.app/Contents/MacOS/firefox",
     "/Applications/Safari.app/Contents/MacOS/Safari",
     "/Applications/Skype.app/Contents/MacOS/Skype",
     "/Applications/iTunes.app/Contents/MacOS/iTunes",
     "/Applications/VLC.app/Contents/MacOS/VLC",
-    "/Applications/MPlayerX.app/Contents/MacOS/MPlayerX"
+    #"/Applications/MPlayerX.app/Contents/MacOS/MPlayerX"
+    "/Applications/QuickTime Player.app/Contents/MacOS/QuickTime Player"
     );
 my @program_names = (
     "PowerPoint",

@@ -21,9 +21,10 @@
 % 	end
 % end
 
-function average = DBA(sequences,iteration)
-    average = repmat(sequences{medoidIndex(sequences)},1);
-	for i=1:iteration
+function [average,idx] = DBA(sequences)
+    idx = medoidIndex(sequences);
+    average = repmat(sequences{idx},1);
+	for i=1:15
 		average=DBA_one_iteration(average,sequences);
 	end
 end
@@ -163,7 +164,7 @@ function dist = distanceTo(a,b)
     dist=(a-b)*(a-b);
 end
 
-function ex = test()
+ function ex = test()
     sequences = {};
     sequences{100}=[];
     for i=1:100
@@ -172,6 +173,6 @@ function ex = test()
     end
     mean=DBA(sequences);
 end
- 
+
 
 	    

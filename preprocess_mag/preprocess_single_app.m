@@ -12,7 +12,7 @@
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function separate_events(filename)
+function preprocess_single_app(filename)
     % addpath('../utils');
 
     %% --------------------
@@ -46,7 +46,7 @@ function separate_events(filename)
     %% --------------------
     %% Check input
     %% --------------------
-    if nargin < 1, filename = '20160420.exp02'; end
+    if nargin < 1, filename = '20160328.exp1'; end
 
 
     %% --------------------
@@ -93,7 +93,7 @@ function separate_events(filename)
     fprintf('  size: %dx%d\n', size(mags));
     fprintf('  duration: %fs\n', mags(end,1));
     fprintf('  freq: %fHz\n', fs);
-    fprintf('Paused, press any key to continue or use Ctrl-C to stop\n');
+    fprintf('Magnetic data loaded, press any key to continue or use Ctrl-C to stop\n');
     pause;
     %%%%%%
     
@@ -110,7 +110,8 @@ function separate_events(filename)
     legend('Red: Synthesize Signal','Blue: M-X','Green:M-Y','Yellow::M-Z');
     title('EM Magnitued of Raw Data');
     %%%%%%
-  
+    fprintf('Raw data ploted, press any key to continue or use Ctrl-C to stop\n');
+    pause;
 
     %% --------------------
     %% Preprocess Mag
@@ -119,10 +120,24 @@ function separate_events(filename)
 
     new_mags = mags;
     for mi = 2:4
-        new_mags(:,mi) = new_mags(:,mi) - min(new_mags(:,mi));
+        new_mags(:,mi) = new_mags(:,mi) - mean(new_mags(:,mi));
     end
     new_mags(:,5) = sqrt(new_mags(:,2).^2 + new_mags(:,3).^2 + new_mags(:,4).^2);
-
+    
+    fig_idx = fig_idx + 1;
+    fh = figure(fig_idx); clf;
+    plot(new_mags(:,1), new_mags(:,5), '-r.');
+    hold on;
+    plot(new_mags(:,1), new_mags(:,2), '-b.');
+    plot(new_mags(:,1), new_mags(:,3), '-g.');
+    plot(new_mags(:,1), new_mags(:,4), '-y.');
+    xlabel('Sample points');
+    ylabel('Magnitude');
+    legend('Red: Synthesize Signal','Blue: M-X','Green:M-Y','Yellow::M-Z');
+    title('EM Magnitued of Normalized Data');
+    
+    fprintf('Normalized data ploted, press any key to continue or use Ctrl-C to stop\n');
+    pause;
 
     %% --------------------
     %% Find Start and End Event
@@ -131,7 +146,7 @@ function separate_events(filename)
 
     ts = new_mags(:,5) - min(new_mags(:,5));
     ts = ts / max(ts);
-    % fig_idx = fig_idx + 1;
+    
     std_event_idx = find_first_event(ts, fs, 1);
     std_event_idx = std_event_idx + manual_offset(filename);
     std_event_time = new_mags(std_event_idx);
@@ -165,7 +180,8 @@ function separate_events(filename)
     tmp(:,6) = tmp(:,5) - min(tmp(:,5));
     tmp(:,6) = tmp(:,6) / max(tmp(:,6));
     new_mags = tmp;
-    
+    % until now, X,Y,Z signal are transformed to zero-mean, synthesized
+    % signal are normalized to zero-mean and range between(0,1).
 
 
     %% --------------------
@@ -182,6 +198,7 @@ function separate_events(filename)
     %    idx = find(new_mags(:,1) == end_time(ti,2));
     %    end_time(ti,1) = idx;
     %end
+    
     %%%%%%
     fprintf('Find Event Index finished, press any key to continue or use Ctrl-C to stop\n');
     pause;
@@ -218,17 +235,13 @@ function separate_events(filename)
         event_type = event_time(ti, 3);
         range_idx = find(new_mags(:,1) >= curr_time & new_mags(:,1) <= (curr_time + appInterval));
 
-        mag_traces = new_mags(range_idx,:);
-        for mi=1:4
-            mag_traces(:,mi) = mag_traces(:,mi) - min(mag_traces(:,mi));
-        end
-        mag_traces(:,5) = sqrt(mag_traces(:,2).^2 + mag_traces(:,3).^2 + mag_traces(:,4).^2);
-        mag_traces(:,6) = mag_traces(:,5) - min(mag_traces(:,5));
-        mag_traces(:,6) = mag_traces(:,6) / max(mag_traces(:,6));
+        mag_traces = new_mags(range_idx,:);   
+        
+        mag_traces(:,1)=mag_traces(:,1)-mag_traces(1,1);
         
         single_app_mag_s{event_type+1}{end+1} = mag_traces;
     end
-    length(single_app_mag_s)
+    %length(single_app_mag_s)
     single_app_type_s = events;
     
     
@@ -248,13 +261,7 @@ function separate_events(filename)
         range_idx = find(new_mags(:,1) >= curr_time & new_mags(:,1) <= (curr_time + endInterval));
 
         mag_traces = new_mags(range_idx,:);
-        %% --normalization
-        for mi=1:4
-            mag_traces(:,mi) = mag_traces(:,mi) - min(mag_traces(:,mi));
-        end
-        mag_traces(:,5) = sqrt(mag_traces(:,2).^2 + mag_traces(:,3).^2 + mag_traces(:,4).^2);
-        mag_traces(:,6) = mag_traces(:,5) - min(mag_traces(:,5));
-        mag_traces(:,6) = mag_traces(:,6) / max(mag_traces(:,6));
+        mag_traces(:,1)=mag_traces(:,1)-mag_traces(1,1);
         
         single_end_mag_s{event_type+1}{end+1} = mag_traces;
     end
@@ -277,10 +284,11 @@ function [idx] = find_first_event(ts, fs, fig_idx)
     a1 = sum(ts(1:win));
     a2 = sum(ts((win+1):(2*win)));
     score(win) = a2 / a1;
+    
     for idx = win+1:range
         a1 = a1 - ts(idx-win) + ts(idx);
         a2 = a2 - ts(idx) + ts(idx+win);
-        score(idx) = a2 / a1;
+        score(idx) = max(a1/a2,a2/a1);
     end
 
     score = score - min(score);
@@ -309,9 +317,5 @@ end
 
 %% manual_offset: function description
 function [offset] = manual_offset(filename)
-    if strcmp(filename, '041801')
-        offset = 20;
-    else
-        offset = 0;
-    end
+    offset = 0;
 end

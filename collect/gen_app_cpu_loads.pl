@@ -37,34 +37,34 @@ my @programs = (
     "/Applications/Microsoft Office 2011/Microsoft Word.app/Contents/MacOS/Microsoft Word",
     "/Applications/Microsoft Office 2011/Microsoft Excel.app/Contents/MacOS/Microsoft Excel",
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    #"/Applications/Firefox.app/Contents/MacOS/firefox",
     "/Applications/Safari.app/Contents/MacOS/Safari",
     "/Applications/Skype.app/Contents/MacOS/Skype",
-    "/Applications/QuickTime Player.app/Contents/MacOS/QuickTime Player",
-    #"/Applications/iTunes.app/Contents/MacOS/iTunes",
+    "/Applications/iTunes.app/Contents/MacOS/iTunes",
+    "/Applications/VLC.app/Contents/MacOS/VLC",
+    #"/Applications/MPlayerX.app/Contents/MacOS/MPlayerX",
+    "/Applications/QuickTime Player.app/Contents/MacOS/QuickTime Player"
     #"/Applications/OmniGraffle.app/Contents/MacOS/OmniGraffle",
     #"/Applications/TeX/TeXShop.app/Contents/MacOS/TeXShop"
-    #"/Applications/VLC.app/Contents/MacOS/VLC",
-    #"/Applications/MPlayerX.app/Contents/MacOS/MPlayerX",
-    #"/Applications/Firefox.app/Contents/MacOS/firefox",
     );
 my @program_names = (
     "PowerPoint",
     "Word",
     "Excel",
     "Chrome",
+    #"Firefox",
     "Safari",
     "Skype",
-    "QuickTimePlayer",
-    #"iTunes",
+    "iTunes",
+    "VLC",
+    #"MPlayerX"
+    "QuickTimePlayer"
     #"OmniGraffle",
     #"Texshop"
-    #"MPlayerX"
-    #"VLC",
-    #"Firefox",
     );
 
 my $openItvl = 8;
-my $closeItvl = 2;
+my $closeItvl = 8;
 
 
 #############
@@ -76,10 +76,14 @@ my $cmd;
 #############
 # check input
 #############
-if(@ARGV != 4) {
-    print "Usage:   ./gen_app_cpu_loads.pl <FileName> <Num Loop> <MobileIP> <MobilePort>", "\n";
-    print "Example: ./gen_app_cpu_loads.pl file01 10 192.168.1.102 12345\n";
-    exit;
+#if(@ARGV != 4) {
+#    print "Usage:   ./gen_app_cpu_loads.pl <FileName> <Num Loop> <MobileIP> <MobilePort>", "\n";
+#    print "Example: ./gen_app_cpu_loads.pl file01 10 192.168.1.102 12345\n";
+#    exit;
+#}
+if (@ARGV != 2) {
+    print "Usage:       ./gen_app_cpu_loads.pl <FileName> <Num Loop>\n";
+    print "Example:     ./gen_app_cpu_loads.pl 20160523 5\n";
 }
 my $filename = $ARGV[0];
 my $num_loop = $ARGV[1];
@@ -99,9 +103,9 @@ open(my $fh2, ">", "$output_dir/$filename.app_close_time.txt")
 
 
 
-if ($SocketOpen){
-    system("nc $ARGV[2] $ARGV[3] > $output_dir/$filename.mag.txt &");
-}
+#if ($SocketOpen){
+#    system("nc $ARGV[2] $ARGV[3] > $output_dir/$filename.mag.txt &");
+#}
 
 my $std_time = [Time::HiRes::gettimeofday()];
 my $loop = $num_loop;
@@ -151,6 +155,6 @@ while($loop --) {
 
 close $fh1;
 close $fh2;
-if ($SocketOpen){
-    system("killall -9 nc");
-}
+#if ($SocketOpen){
+#    system("killall -9 nc");
+#}

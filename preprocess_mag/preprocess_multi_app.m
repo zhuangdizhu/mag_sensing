@@ -110,7 +110,7 @@ function preprocess_multi_app(filename)
 
     new_mags = mags;
     for mi = 2:4
-        new_mags(:,mi) = new_mags(:,mi) - min(new_mags(:,mi));
+        new_mags(:,mi) = new_mags(:,mi) - mean(new_mags(:,mi));
     end
     new_mags(:,5) = sqrt(new_mags(:,2).^2 + new_mags(:,3).^2 + new_mags(:,4).^2);
 
@@ -145,7 +145,7 @@ function preprocess_multi_app(filename)
         
     for mi = 2:4
         tmp(:,mi) = interp1(new_mags(index,1), new_mags(index,mi), tmp(:,1));
-        tmp(:,mi) = tmp(:,mi) - min(tmp(:,mi));%%%%%different from single mode
+        tmp(:,mi) = tmp(:,mi) - mean(tmp(:,mi));
     end
 
     tmp(:,5) = sqrt(tmp(:,2).^2 + tmp(:,3).^2 + tmp(:,4).^2);
@@ -210,8 +210,9 @@ function preprocess_multi_app(filename)
 
         mag_traces = new_mags(range_idx,:);
         
-        for mi=1:4
-            mag_traces(:,mi) = mag_traces(:,mi) - min(mag_traces(:,mi));
+        mag_traces(:,1) = mag_traces(:,1) - (mag_traces(1,1));
+        for mi=2:4
+            mag_traces(:,mi) = mag_traces(:,mi) - mean(mag_traces(:,mi));
         end
 
         mag_traces(:,5) = sqrt(mag_traces(:,2).^2 + mag_traces(:,3).^2 + mag_traces(:,4).^2);
@@ -220,7 +221,7 @@ function preprocess_multi_app(filename)
         
         multi_app_mag_s{first_event_type+1}{end+1} = mag_traces;
     end
-    
+    size(first_events,1)
     %% ---------------
     %% Seperate End Events
     %% ---------------
@@ -238,8 +239,11 @@ function preprocess_multi_app(filename)
 
         mag_traces = new_mags(range_idx,:);
         %% --normalization
-        for mi=1:4
-            mag_traces(:,mi) = mag_traces(:,mi) - min(mag_traces(:,mi));
+        
+        mag_traces(:,1) = mag_traces(:,1) - (mag_traces(1,1));
+        
+        for mi=2:4
+            mag_traces(:,mi) = mag_traces(:,mi) - mean(mag_traces(:,mi));
         end
         mag_traces(:,5) = sqrt(mag_traces(:,2).^2 + mag_traces(:,3).^2 + mag_traces(:,4).^2);
         mag_traces(:,6) = mag_traces(:,5) - min(mag_traces(:,5));
