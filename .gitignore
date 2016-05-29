@@ -2,6 +2,11 @@ delete
 *bak
 tmp
 *.pyc
+*.jpg
+*.eps
+*.pdf
+*.docx
+*.DS_Store
 ## directory
 mag_website
 top_website
@@ -12,4 +17,6 @@ svm
 result
 gen
 data
+Figure
 sqr_mul
+collect/collect
