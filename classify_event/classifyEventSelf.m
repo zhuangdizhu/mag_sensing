@@ -7,8 +7,8 @@
 
 function [confusionMatrix, correlationMatrix] = classifyEventSelf(filename,frequency_cnt)
     if nargin < 1
-        filename = '20160528.exp02'; 
-        frequency_cnt = 45; %maximum frequency domain 
+        filename = '20160528.exp03'; 
+        frequency_cnt = 20; %maximum frequency domain 
     elseif nargin == 1
         frequency_cnt = 100;
     end
@@ -18,17 +18,24 @@ function [confusionMatrix, correlationMatrix] = classifyEventSelf(filename,frequ
     FontSize = 20;
     
     %DEBUG = 0;  % Raw Data + 1NN
-    DEBUG = 1;  % Average DTW + 1NN
-    %DEBUG = 2;  % FFT + 1NN
+    %DEBUG = 1;  % Average DTW + 1NN
+    DEBUG = 2;  % FFT + 1NN
+
+        
+    %Average DTW + 1NN
+    IF_CC = 1;
+    IF_DTW = 1;
     
+    %FFT + 1NN
+    IF_AVERAGE = 1;
+    
+    
+    %Raw Data + 1NN    
     %DEBUG01 = 0; %Default
     %DEBUG01 = 1; %cross correlation
     %DEBUG01 = 2; % moving average smooth
     %DEBUG01 = 3; %weighted moving average smooth
     %DEBUG01 = 4; %Exponential Moving Average filter 
-        
-    IF_CC = 1;
-    
     %% --------------------
     %% Main starts
     %% --------------------
@@ -37,9 +44,9 @@ function [confusionMatrix, correlationMatrix] = classifyEventSelf(filename,frequ
     if DEBUG == 0
         [confusionMatrix, correlationMatrix] = defaultClassify(appMags, appTypes, fig_idx,FontSize, DEBUG01);
     elseif DEBUG == 1
-        [confusionMatrix, correlationMatrix] = classifyByDBA(appMags, appTypes, IF_CC, fig_idx, FontSize);
+        [confusionMatrix, correlationMatrix] = classifyByDBA(appMags, appTypes, IF_CC, IF_DTW, fig_idx, FontSize);
     elseif DEBUG == 2
-        [confusionMatrix, correlationMatrix] = classifyByFFT(appMags, appTypes, frequency_cnt, fig_idx,FontSize);
+        [confusionMatrix, correlationMatrix] = classifyByFFT(appMags, appTypes, frequency_cnt, IF_AVERAGE, fig_idx,FontSize);
     end
 end
 function [confusionMatrix, correlationMatrix] = defaultClassify(mags, appTypes, fig_idx, FontSize, DEBUG01)
@@ -140,7 +147,7 @@ end
     colorbar;
     title('Confusion Matrix','FontSize',FontSize);
 end
-function [confusionMatrix, correlationMatrix]= classifyByDBA(mags, appTypes, IF_CC, fig_idx, FontSize)
+function [confusionMatrix, correlationMatrix]= classifyByDBA(mags, appTypes, IF_CC, IF_DTW, fig_idx, FontSize)
 FontSize = 20;
 confusionMatrix = zeros(length(appTypes));
 correlationMatrix = zeros(length(appTypes));
@@ -177,17 +184,20 @@ for ti = 1:length(mags)
                         ts2(yy) = ts2(length(ts2)-I);
                     end    
                 end
-            len = min(length(ts1), length(ts2));
-            ts1 = ts1(1:len);
-            ts2 = ts2(1:len); 
-            r = corrcoef(ts1, ts2);
-            dist = r(1,2)*r(1,2);            
-            if isnan(r) , disp 'wrong';continue;end
-            
+            end
+                
+            if IF_DTW == 1
+                len = min(length(ts1), length(ts2));
+                ts1 = ts1(1:len);
+                ts2 = ts2(1:len); 
+                r = corrcoef(ts1, ts2);
+                dist = r(1,2)*r(1,2);
+                if isnan(r) , disp 'wrong';continue;end
             else
                 dist = dtw(ts1,ts2);
-                dist = 1/(dist * dist);
+                dist = 1/(dist*dist);
             end
+            
             
             if (dist > highestInertia)
                 index = tj;
@@ -216,11 +226,89 @@ correlationMatrix = correlationMatrix ./ repmat(sum(correlationMatrix,2),1,size(
     colorbar;
     title('Confusion Matrix','FontSize',FontSize);        
 end
-function [confusionMatrix, correlationMatrix] = classifyByFFT(appMags, appTypes, frequency_cnt, fig_idx,FontSize)
-        [featureMatrix, labelMatrix] = extractFrequency(appMags, appTypes, frequency_cnt);
-        [confusionMatrix, correlationMatrix]= NNClassify(featureMatrix,labelMatrix,appTypes, fig_idx,FontSize);
+function [confusionMatrix, correlationMatrix] = classifyByFFT(appMags, appTypes, frequency_cnt, IF_AVERAGE, fig_idx,FontSize)
+
+confusionMatrix = zeros(length(appTypes));
+correlationMatrix = zeros(length(appTypes));
+
+[featureMatrix, labelMatrix] = extractFrequency(appMags, appTypes, frequency_cnt);
+
+if IF_AVERAGE == 0
+    [confusionMatrix, correlationMatrix]= tradtionalClassify(featureMatrix,labelMatrix,appTypes, fig_idx,FontSize);
+else    
+    confusionMatrix = zeros(length(appTypes));
+    correlationMatrix = zeros(length(appTypes));
+    %find train average
+    averageMags = cell(1,length(appMags));
+    avgTrainFeatures = {};
+    avgTrainLabels = {};
+
+    for i = 1:length(appMags)
+    tmpMags = cell(1,length(appMags{i}));
+    for j = 1:length(appMags{i})
+    tmpMags{j}= appMags{i}{j}(:,2);
+    end
+    [averageMags{i},~] = DBA(tmpMags);
+    end
+
+    %find train features
+    for ti = 1:length(averageMags)
+	curr_mag = averageMags{ti};
+	fft_ret = abs(fft(curr_mag));
+	fft_ret = fft_ret(1:frequency_cnt);
+	avgTrainFeatures{ti} = fft_ret;
+	avgTrainLabels{ti} = ti;
+    end
+
+    %classify
+    for ti =1:length(featureMatrix)     
+        index = -1;
+        highestInertia = -1;
+    
+        for tj=1:length(avgTrainFeatures)
+            ts1 = featureMatrix{ti};
+            ts2 = avgTrainFeatures{tj};
+            label1 = labelMatrix{ti}; 
+            label2 = avgTrainLabels{tj};
+            
+            if length(ts2) ~= length(ts1)
+            len = min(length(ts1),length(ts2));
+            ts1 = ts1(1:len);
+            ts2 = ts2(1:len);
+            end
+            
+            r = corrcoef(ts1,ts2);
+            dist = r(1,2)*r(1,2);
+            
+            if (dist > highestInertia)
+                index = tj;
+                highestInertia = dist;
+            end
+            
+            correlationMatrix(label1, label2) = correlationMatrix(label1, label2) + dist;
+        end
+        
+        confusionMatrix(label1, index) = confusionMatrix(label1, index) + 1; 
+    end
+    confusionMatrix = confusionMatrix ./ repmat(sum(confusionMatrix,2), 1, size(confusionMatrix,2));
+    correlationMatrix = correlationMatrix ./ repmat(sum(correlationMatrix,2),1,size(correlationMatrix,2));
 end
-function [confusionMatrix, correlationMatrix]= NNClassify(featureMatrix,labelMatrix,app_types, fig_idx, FontSize)
+fig_idx = fig_idx + 1;
+fh = figure(fig_idx); clf;
+
+subplot(1,2,1)
+imagesc(correlationMatrix);
+colorbar;
+title('correlationMatrix','FontSize',FontSize);
+
+subplot(1,2,2)
+imagesc(confusionMatrix);
+colorbar;
+title('confusionMatrix','FontSize',FontSize);
+
+end
+
+function [confusionMatrix, correlationMatrix]= tradtionalClassify(featureMatrix,labelMatrix,app_types, fig_idx, FontSize)
 confusionMatrix = zeros(length(app_types));
 correlationMatrix = zeros(length(app_types));
 cntMatrix = zeros(length(app_types));
@@ -249,18 +337,6 @@ for ti =1:length(featureMatrix)
     confusionMatrix(label1, cate_idx) = confusionMatrix(label1, cate_idx) + 1;
 end
 correlationMatrix = correlationMatrix/cntMatrix;
-fig_idx = fig_idx + 1;
-fh = figure(fig_idx); clf;
-
-subplot(1,2,1)
-imagesc(correlationMatrix);
-colorbar;
-title('correlationMatrix','FontSize',FontSize);
-
-subplot(1,2,2)
-imagesc(confusionMatrix);
-colorbar;
-title('confusionMatrix','FontSize',FontSize);
 end
 function [featureMatrix, labelMatrix] = extractFrequency(app_mags,app_types,frequency_cnt)
 featureMatrix = {};

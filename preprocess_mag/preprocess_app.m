@@ -4,16 +4,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function preprocess_app(filename)
-    % addpath('../utils');
 
-    %% --------------------
-    %% DEBUG
-    %% --------------------
-    DEBUG2 = 1;
-
-    %% --------------------
-    %% Constant
-    %% --------------------
     input_dir  = '../collect/gen/';
     output_dir = '../preprocess_mag/data/';
 
@@ -21,6 +12,7 @@ function preprocess_app(filename)
     %% --------------------
     %% Variable
     %% --------------------
+     DEBUG2 = 1;
     fig_idx = 0;
     appMags = {};
     app_type_s = {};

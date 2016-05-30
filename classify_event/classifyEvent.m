@@ -28,7 +28,7 @@ function classifyEvent(testFile, trainFile)
     if nargin == 1 
         [confusionMatrix, correlationMatrix] = classifyEventSelf(testFile);
     elseif nargin < 1
-        testFile = '20160528.exp03';
+        testFile = '20160528.exp02';
         trainFile = '20160529.exp01';
     end
     [test_mags, test_app_types] = read_single_mat_input(input_dir,testFile);  

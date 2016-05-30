@@ -67,27 +67,37 @@ if __name__ == "__main__":
     ## Read Event Time
     ###################
     if DEBUG2: print "Read Event Time"
-    event_ts   = []
-    events     = dict()  ## event and its indices
+    #event_ts   = []
     event_type = dict()  ## event and its type
     type_cnt   = 0
-    f = open(input_dir + output_filename + ".app_time_processed.txt", 'w')
-    with open(input_dir + input_filename + ".app_time.txt", 'rb') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-        cnt = 0
-        for row in spamreader:
-            # print ', '.join(row)
-            #ts1.append(float(row[0]))
-            event_ts.append(row[1])
-            # print "%d: %f, %s" % (cnt, ts1[cnt], events[cnt])
-            if row[1] in events:
-                events[row[1]].append(cnt)
-            else:
-                events[row[1]] = [cnt]
-                event_type[row[1]] = type_cnt
-                type_cnt += 1
-            f.write("%s,%d\n" % (row[0], event_type[row[1]]))
-        cnt += 1
+    if mode == "S":
+        f = open(input_dir + output_filename + ".app_time_processed.txt", 'w')
+        with open(input_dir + input_filename + ".app_time.txt", 'rb') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            for row in spamreader:
+                if row[1] in event_type:
+                    pass
+                else:
+                    event_type[row[1]] = type_cnt
+                    type_cnt += 1
+                f.write("%s,%d\n" % (row[0], event_type[row[1]]))
+
+    else:
+        f = open(input_dir + output_filename + ".multi_app_time_processed.txt", 'w')
+        with open(input_dir + input_filename + ".multi_app_time.txt", 'rb') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            for row in spamreader:
+                if row[1] in event_type:
+                    pass
+                else:
+                    event_type[row[1]] = type_cnt
+                    type_cnt += 1
+                if row[2] in event_type:
+                    pass
+                else:
+                    event_type[row[2]] = type_cnt
+                    type_cnt += 1
+                f.write("%s,%d,%d\n" % (row[0], event_type[row[1]], event_type[row[2]]))
     f.close()
 
     ###################
@@ -99,24 +109,29 @@ if __name__ == "__main__":
     magy = []
     magz = []
     mags = []
-    f = open(input_dir + output_filename + ".mag_processed.txt", 'w')
-    #with open(input_dir + filename + ".mag.txt", 'rb') as csvfile:
+    postfix = ''
+    if mode == "S":
+        f = open(input_dir + output_filename + ".mag_processed.txt", 'w')
+        postfix = ".mag.csv"
+
+    else:
+        f = open(input_dir + output_filename + ".multi_mag_processed.txt", 'w')
+        postfix = ".multi_mag.csv"
+
     if app == 'A' or app == 'I':
-        with open(input_dir + input_filename + ".mag.csv", 'rb') as csvfile:
+        with open(input_dir + input_filename + postfix, 'rb') as csvfile:
             spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
             spamreader = list(spamreader)
             spamreader.pop(0)
             cnt = 0
             for row in spamreader:
                 if app == 'A':
-                    #print str(len(row)) + ", " + ', '.join(row)
                     if len(row) < 5: continue
                     ts2.append(float(row[0]))
                     magx.append(float(row[1]))
                     magy.append(float(row[2]))
                     magz.append(float(row[3]))
                     mags.append(float(row[4]))
-                    # print "%d: %f, %f, %f, %f" % (cnt, ts2[cnt], magx[cnt], magy[cnt], magz[cnt])
                     f.write("%.2f,%.2f,%.2f,%.2f,%.2f\n" % (ts2[cnt], magx[cnt], magy[cnt], magz[cnt], mags[cnt]))
                     cnt += 1
                 elif app == 'I':
