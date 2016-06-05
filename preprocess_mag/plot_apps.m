@@ -18,8 +18,8 @@ function plot_apps(filename1, filename2)
     colors = ['r', 'g', 'b', 'c', 'k'];
     
     if nargin < 1
-        filename1 = '20160527.exp01';
-        filename2 = '20160527.exp02';
+        filename1 = '20160528.exp01';
+        filename2 = '20160528.exp03';
     end     
         [app_mags1, app_types1] = read_single_mat_input(input_dir,filename1);
 
@@ -59,31 +59,64 @@ function plot_apps(filename1, filename2)
         averageMags1 = cell(1,length(app_mags1));
         averageMags2 = cell(1,length(app_mags2));
         
+        averageTms1 = cell(1, length(app_mags1));
+        averageTms2 = cell(1, length(app_mags2));
+        
         for i = 1:length(app_mags1)
-            tmpMags1 = cell(1,length(app_mags1{i}));
-            tmpMags2 = cell(1,length(app_mags2{i}));
-            
+            tmpMags1 = cell(1,length(app_mags1{i}));            
             for j = 1:length(app_mags1{i})
                 tmpMags1{j}= app_mags1{i}{j}(:,2);
-                tmpMags2{j}= app_mags2{i}{j}(:,2);
             end
-            [averageMags1{i},~] = DBA(tmpMags1);
-            [averageMags2{i},~] = DBA(tmpMags2);
+            [averageMags1{i},idx1] = DBA(tmpMags1);
+            averageTms1{i} = app_mags1{i}{idx1}(:,1);
         end 
         
+        for i = 1:length(app_mags2)
+            tmpMags2 = cell(1,length(app_mags2{i}));            
+            for j = 1:length(app_mags2{i})
+                tmpMags2{j}= app_mags2{i}{j}(:,2);
+            end
+            [averageMags2{i},idx1] = DBA(tmpMags2);
+            averageTms2{i} = app_mags2{i}{idx1}(:,1);
+        end         
+        
+        %cross correlation
         %plot
-        for i = 1:length(app_mags1)
+        
+        for i = 1:4%length(app_mags1)
         	fig_idx = fig_idx + 1;            
             fh = figure(fig_idx); clf; 
             %time idx
-   
-            subplot(1,2,1)
-            plot(averageMags1{i},'Color','g','LineWidth',LineWidth);
-            title('IOS Sensor','FontSize',FontSize);
-            subplot(1,2,2)
-            plot(averageMags2{i},'Color','y','LineWidth',LineWidth);
-            title('Andorid Sensor','FontSize',FontSize);
-        end     
+            subplot(3,1,1)
+            plot(averageTms1{i}, averageMags1{i},'Color','b','LineWidth',LineWidth);
+            title('Attacker: iphone SE Target: MacBook 1(Zhuangdi)','FontSize',FontSize);
+            subplot(3,1,2) 
+            plot(averageTms2{i}, averageMags2{i},'Color','y','LineWidth',LineWidth);
+            title('Attacker: iphone 5S Target: MacBook 2(Yichao)','FontSize',FontSize);
+            subplot(3,1,3)
+            plot(averageTms1{i}, averageMags1{i},'b', averageTms2{i}, averageMags2{i},'y', 'LineWidth',LineWidth);
+            legend({'MacBook 1','MacBook 2'},'FontSize',FontSize);   
+            title('Comparison','FontSize',FontSize);
+            
+        end  
+
+        
+        for i = 5:8%length(app_mags1)
+        	fig_idx = fig_idx + 1;            
+            fh = figure(fig_idx); clf; 
+            %time idx
+            subplot(3,1,1)
+            plot(averageTms1{i}, averageMags1{i},'Color','b','LineWidth',LineWidth);
+            title('Attacker: iphone SE Target: MacBook 1(Zhuangdi)','FontSize',FontSize);
+            subplot(3,1,2) 
+            plot(averageTms2{i+1}, averageMags2{i+1},'Color','y','LineWidth',LineWidth);
+            title('Attacker: iphone 5S Target: MacBook 2(Yichao)','FontSize',FontSize);
+            subplot(3,1,3)
+            plot(averageTms1{i}, averageMags1{i},'b', averageTms2{i+1}, averageMags2{i+1},'y', 'LineWidth',LineWidth);
+            legend({'MacBook 1','MacBook 2'},'FontSize',FontSize);   
+            title('Comparison','FontSize',FontSize);
+         end          
+        
         end
         
         %average smooth

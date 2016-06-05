@@ -37,13 +37,13 @@ my @programs = (
     "/Applications/Microsoft Office 2011/Microsoft Word.app/Contents/MacOS/Microsoft Word",
     "/Applications/Microsoft Office 2011/Microsoft Excel.app/Contents/MacOS/Microsoft Excel",
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    #"/Applications/Firefox.app/Contents/MacOS/firefox",
+    "/Applications/Firefox.app/Contents/MacOS/firefox",
     "/Applications/Safari.app/Contents/MacOS/Safari",
     "/Applications/Skype.app/Contents/MacOS/Skype",
     "/Applications/iTunes.app/Contents/MacOS/iTunes",
     "/Applications/VLC.app/Contents/MacOS/VLC",
-    #"/Applications/MPlayerX.app/Contents/MacOS/MPlayerX",
-    "/Applications/QuickTime Player.app/Contents/MacOS/QuickTime Player"
+    "/Applications/MPlayerX.app/Contents/MacOS/MPlayerX",
+    #"/Applications/QuickTime Player.app/Contents/MacOS/QuickTime Player"
     #"/Applications/OmniGraffle.app/Contents/MacOS/OmniGraffle",
     #"/Applications/TeX/TeXShop.app/Contents/MacOS/TeXShop"
     );
@@ -52,13 +52,13 @@ my @program_names = (
     "Word",
     "Excel",
     "Chrome",
-    #"Firefox",
+    "Firefox",
     "Safari",
     "Skype",
     "iTunes",
     "VLC",
-    #"MPlayerX"
-    "QuickTimePlayer"
+    "MPlayerX"
+    #"QuickTimePlayer"
     #"OmniGraffle",
     #"Texshop"
     );

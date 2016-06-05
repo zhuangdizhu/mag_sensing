@@ -22,7 +22,7 @@ function preprocess_app(filename)
     %% --------------------
     %% Check input
     %% --------------------
-    if nargin < 1, filename = '20160529.exp01';end
+    if nargin < 1, filename = '20160531.exp02';end
 
     %% --------------------
     %% Main starts
@@ -137,18 +137,18 @@ function preprocess_app(filename)
     %% --------------------
     if DEBUG2, fprintf('Preprocess Mag\n'); end
     
-    fig_idx = fig_idx + 1;
-    fh = figure(fig_idx); clf;
-    plot(new_mags(:,1), new_mags(:,5), '-.');
-    hold on;
-    plot(event_time(:,2), new_mags(event_time(:,1), 5), 'ko');    
-    xlabel('Sample points');
-    ylabel('Magnitude');
-    legend('Synthesize Signal', 'Event Start Time');
-    title('EM Magnitued of Normalized Data');
+    %fig_idx = fig_idx + 1;
+    %fh = figure(fig_idx); clf;
+    %plot(new_mags(:,1), new_mags(:,5), '-.');
+    %hold on;
+    %plot(event_time(:,2), new_mags(event_time(:,1), 5), 'ko');    
+    %xlabel('Sample points');
+    %ylabel('Magnitude');
+    %legend('Synthesize Signal', 'Event Start Time');
+    %title('EM Magnitued of Normalized Data');
     
-    fprintf('Interploated and normalized data, press any key to continue or use Ctrl-C to stop\n');
-    pause;
+    %fprintf('Interploated and normalized data, press any key to continue or use Ctrl-C to stop\n');
+    %pause;
     
     %% --------
     %% Seperate Start Events
@@ -222,5 +222,5 @@ end
 
 %% manual_offset: function description
 function [offset] = manual_offset()
-    offset = 0;
+    offset = 25;
 end
